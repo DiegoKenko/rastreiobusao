@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:rastreiobusao/class/busao.dart';
+import 'package:rastreiobusao/class/rota.dart';
+import 'package:rastreiobusao/firebase/firestore.dart';
+import 'package:rastreiobusao/firebase/realtime.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,6 +37,18 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  StreamSubscription<Position>? _currentPositionStream;
+  LatLng location = LatLng(-22.98, -44.99);
+  Rota rotaAtual = Rota();
+  Busao busaoAtual = Busao();
+
+  @override
+  void dispose() {
+    _currentPositionStream?.cancel();
+    _currentPositionStream = null;
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,5 +66,15 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
+  }
+
+  _getStremLocation() async {
+    _currentPositionStream = Geolocator.getPositionStream(
+      intervalDuration: const Duration(seconds: 4),
+      desiredAccuracy: LocationAccuracy.high,
+    ).listen((event) {
+      location = LatLng(event.latitude, event.longitude);
+      Realtime().attLocalizacao(rotaAtual, busaoAtual, location);
+    });
   }
 }
