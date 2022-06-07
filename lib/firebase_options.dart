@@ -41,7 +41,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDZT5coXo6WlxWHoe4iZGLYkg8bq7xK1CM',
-    appId: '1:519420295610:android:6b19564b45bff8cb6b4583',
+    appId: '1:519420295610:android:c3089dca57bbb2766b4583',
     messagingSenderId: '519420295610',
     projectId: 'multirotas-b3006',
     databaseURL: 'https://multirotas-b3006-default-rtdb.firebaseio.com',

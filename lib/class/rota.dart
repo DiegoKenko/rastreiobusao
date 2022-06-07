@@ -7,8 +7,6 @@ class Rota {
   bool? ida;
   List<dynamic>? parada;
 
-  Rota();
-
   Rota.fromMap(Map<String, dynamic> data)
       : id = data["id"],
         busao = data["busao"],
