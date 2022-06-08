@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
@@ -55,6 +56,7 @@ class _MyHomePageState extends State<MyHomePage> {
   LatLng location = LatLng(-22.98, -44.99);
   List<Rota> todasRotas = [];
   List<Busao> todosBusao = [];
+  bool ida = true;
 
   @override
   void dispose() {
@@ -65,19 +67,140 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    buscaRotas();
-    buscaBusao();
     _getStremLocation();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    Color getColorTran(Set<MaterialState> states) {
+      const Set<MaterialState> interactiveStates = <MaterialState>{
+        MaterialState.selected,
+        MaterialState.focused,
+        MaterialState.disabled
+      };
+      if (states.contains(MaterialState.selected)) {
+        return Colors.transparent;
+      }
+      return Colors.transparent;
+    }
+
+    Color getColor(Set<MaterialState> states) {
+      return Color.fromARGB(255, 82, 168, 218);
+    }
+
     return Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [ListView()],
+          children: [
+            Container(
+              color: Colors.yellow,
+              height: MediaQuery.of(context).size.height * 0.15,
+              width: MediaQuery.of(context).size.width,
+              child: Center(
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  height: 200,
+                  child: FittedBox(
+                    fit: BoxFit.fill,
+                    child: Switch(
+                      value: ida,
+                      thumbColor: MaterialStateProperty.resolveWith(getColor),
+                      trackColor:
+                          MaterialStateProperty.resolveWith(getColorTran),
+                      onChanged: (bool value1) {
+                        setState(() {
+                          ida = value1;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              color: Colors.amber,
+              height: MediaQuery.of(context).size.height * 0.2,
+              width: MediaQuery.of(context).size.width,
+              child: Center(
+                child: FutureBuilder(
+                  future: buscaRotas(),
+                  builder: (context, snap) {
+                    if (todasRotas.isNotEmpty) {
+                      return Container(
+                        height: 100,
+                        width: MediaQuery.of(context).size.width,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: todasRotas.length,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              padding: EdgeInsets.all(10),
+                              height: 50,
+                              width: MediaQuery.of(context).size.width * 0.4,
+                              child: ListTile(
+                                tileColor: Colors.grey,
+                                title: Text(todasRotas[index].nome!),
+                                subtitle: Text(
+                                    todasRotas[index].ida! ? 'ida' : 'volta'),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    } else {
+                      return Text('Carregando...');
+                    }
+                  },
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 40,
+            ),
+            Container(
+              color: Colors.blueAccent,
+              height: MediaQuery.of(context).size.height * 0.2,
+              width: MediaQuery.of(context).size.width,
+              child: Center(
+                child: FutureBuilder(
+                  future: buscaBusao(),
+                  builder: (context, snap) {
+                    if (todasRotas.isNotEmpty) {
+                      return Container(
+                        height: 100,
+                        width: MediaQuery.of(context).size.width,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: todasRotas.length,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              padding: EdgeInsets.all(10),
+                              height: 50,
+                              width: MediaQuery.of(context).size.width * 0.4,
+                              child: ListTile(
+                                tileColor: Colors.grey,
+                                title: Text(todosBusao[index].placa!),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    } else {
+                      return Text('Carregando...');
+                    }
+                  },
+                ),
+              ),
+            ),
+            Container(
+              color: Colors.indigo,
+              height: MediaQuery.of(context).size.height * 0.3,
+              width: MediaQuery.of(context).size.width,
+              child: Center(),
+            ),
+          ],
         ),
       ),
     );
@@ -93,15 +216,11 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void buscaRotas() async {
-    Firestore().todasRotas().then((value) {
-      todasRotas = value;
-    });
+  Future<void> buscaRotas() async {
+    //todasRotas = await Firestore().todasRotas();
   }
 
-  void buscaBusao() async {
-    Firestore().todosBusao().then((value) {
-      todosBusao = value;
-    });
+  Future<void> buscaBusao() async {
+    //todosBusao = await Firestore().todosBusao();
   }
 }
