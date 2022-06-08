@@ -1,14 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:rastreiobusao/class/busao.dart';
 import 'package:rastreiobusao/class/rota.dart';
-import 'package:rastreiobusao/firebase/firestore.dart';
-import 'package:rastreiobusao/firebase/realtime.dart';
-import 'package:rastreiobusao/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,7 +49,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   StreamSubscription<Position>? _currentPositionStream;
-  LatLng location = LatLng(-22.98, -44.99);
+  LatLng location = const LatLng(-22.98, -44.99);
   List<Rota> todasRotas = [];
   List<Busao> todosBusao = [];
   bool ida = true;
@@ -74,11 +70,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     Color getColorTran(Set<MaterialState> states) {
-      const Set<MaterialState> interactiveStates = <MaterialState>{
-        MaterialState.selected,
-        MaterialState.focused,
-        MaterialState.disabled
-      };
       if (states.contains(MaterialState.selected)) {
         return Colors.transparent;
       }
@@ -86,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     Color getColor(Set<MaterialState> states) {
-      return Color.fromARGB(255, 82, 168, 218);
+      return const Color.fromARGB(255, 82, 168, 218);
     }
 
     return Scaffold(
@@ -128,7 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   future: buscaRotas(),
                   builder: (context, snap) {
                     if (todasRotas.isNotEmpty) {
-                      return Container(
+                      return SizedBox(
                         height: 100,
                         width: MediaQuery.of(context).size.width,
                         child: ListView.builder(
@@ -136,7 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           itemCount: todasRotas.length,
                           itemBuilder: (context, index) {
                             return Container(
-                              padding: EdgeInsets.all(10),
+                              padding: const EdgeInsets.all(10),
                               height: 50,
                               width: MediaQuery.of(context).size.width * 0.4,
                               child: ListTile(
@@ -150,13 +141,13 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       );
                     } else {
-                      return Text('Carregando...');
+                      return const Text('Carregando...');
                     }
                   },
                 ),
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 40,
             ),
             Container(
@@ -168,7 +159,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   future: buscaBusao(),
                   builder: (context, snap) {
                     if (todasRotas.isNotEmpty) {
-                      return Container(
+                      return SizedBox(
                         height: 100,
                         width: MediaQuery.of(context).size.width,
                         child: ListView.builder(
@@ -176,7 +167,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           itemCount: todasRotas.length,
                           itemBuilder: (context, index) {
                             return Container(
-                              padding: EdgeInsets.all(10),
+                              padding: const EdgeInsets.all(10),
                               height: 50,
                               width: MediaQuery.of(context).size.width * 0.4,
                               child: ListTile(
@@ -188,7 +179,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       );
                     } else {
-                      return Text('Carregando...');
+                      return const Text('Carregando...');
                     }
                   },
                 ),
@@ -198,7 +189,7 @@ class _MyHomePageState extends State<MyHomePage> {
               color: Colors.indigo,
               height: MediaQuery.of(context).size.height * 0.3,
               width: MediaQuery.of(context).size.width,
-              child: Center(),
+              child: const Center(),
             ),
           ],
         ),
