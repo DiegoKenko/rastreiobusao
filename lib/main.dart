@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:rastreiobusao/class/busao.dart';
 import 'package:rastreiobusao/class/rota.dart';
+import 'firebase/firestore.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,6 +54,8 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Rota> todasRotas = [];
   List<Busao> todosBusao = [];
   bool ida = true;
+  Color idaCor = Colors.orange;
+  Color voltaCor = Colors.green;
 
   @override
   void dispose() {
@@ -81,37 +84,35 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     return Scaffold(
+      backgroundColor: Color.fromARGB(255, 255, 254, 237),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              color: Colors.yellow,
-              height: MediaQuery.of(context).size.height * 0.15,
-              width: MediaQuery.of(context).size.width,
-              child: Center(
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  height: 200,
-                  child: FittedBox(
-                    fit: BoxFit.fill,
-                    child: Switch(
-                      value: ida,
-                      thumbColor: MaterialStateProperty.resolveWith(getColor),
-                      trackColor:
-                          MaterialStateProperty.resolveWith(getColorTran),
-                      onChanged: (bool value1) {
-                        setState(() {
-                          ida = value1;
-                        });
-                      },
-                    ),
+              child: ListTile(
+                leading: const Text(
+                  'Caminho de ida até a Multitécnica',
+                  style: TextStyle(
+                    color: Colors.black,
                   ),
+                ),
+                trailing: Switch(
+                  inactiveThumbColor: idaCor,
+                  activeColor: voltaCor,
+                  inactiveTrackColor: idaCor,
+                  value: ida,
+                  onChanged: (bool value) {
+                    setState(() {
+                      ida = value;
+                    });
+                  },
                 ),
               ),
             ),
             Container(
-              color: Colors.amber,
+              color: ida ? voltaCor : idaCor,
+              padding: const EdgeInsets.all(10),
               height: MediaQuery.of(context).size.height * 0.2,
               width: MediaQuery.of(context).size.width,
               child: Center(
@@ -126,17 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           scrollDirection: Axis.horizontal,
                           itemCount: todasRotas.length,
                           itemBuilder: (context, index) {
-                            return Container(
-                              padding: const EdgeInsets.all(10),
-                              height: 50,
-                              width: MediaQuery.of(context).size.width * 0.4,
-                              child: ListTile(
-                                tileColor: Colors.grey,
-                                title: Text(todasRotas[index].nome!),
-                                subtitle: Text(
-                                    todasRotas[index].ida! ? 'ida' : 'volta'),
-                              ),
-                            );
+                            return cardRota(todasRotas[index]);
                           },
                         ),
                       );
@@ -151,7 +142,7 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 40,
             ),
             Container(
-              color: Colors.blueAccent,
+              padding: const EdgeInsets.all(20),
               height: MediaQuery.of(context).size.height * 0.2,
               width: MediaQuery.of(context).size.width,
               child: Center(
@@ -160,21 +151,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   builder: (context, snap) {
                     if (todasRotas.isNotEmpty) {
                       return SizedBox(
-                        height: 100,
+                        height: 80,
                         width: MediaQuery.of(context).size.width,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
-                          itemCount: todasRotas.length,
+                          itemCount: todosBusao.length,
                           itemBuilder: (context, index) {
-                            return Container(
-                              padding: const EdgeInsets.all(10),
-                              height: 50,
-                              width: MediaQuery.of(context).size.width * 0.4,
-                              child: ListTile(
-                                tileColor: Colors.grey,
-                                title: Text(todosBusao[index].placa!),
-                              ),
-                            );
+                            return cardBusao(todosBusao[index]);
                           },
                         ),
                       );
@@ -208,10 +191,58 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> buscaRotas() async {
-    //todasRotas = await Firestore().todasRotas();
+    todasRotas = await Firestore().todasRotas();
   }
 
   Future<void> buscaBusao() async {
-    //todosBusao = await Firestore().todosBusao();
+    todosBusao = await Firestore().todosBusao();
+  }
+
+  Widget cardRota(Rota rota) {
+    return Container(
+      color: Colors.transparent,
+      padding: const EdgeInsets.only(right: 10, left: 10),
+      width: MediaQuery.of(context).size.width * 0.7,
+      child: GestureDetector(
+        child: Card(
+          child: Center(
+            child: Text(
+              rota.nome!,
+              style: const TextStyle(
+                color: Colors.white,
+                letterSpacing: 2,
+              ),
+            ),
+          ),
+          shadowColor: Colors.white,
+          color: const Color(0xFF373D69),
+        ),
+        onTap: () {},
+      ),
+    );
+  }
+
+  Widget cardBusao(Busao busao) {
+    return Container(
+      color: Colors.transparent,
+      padding: const EdgeInsets.only(right: 10, left: 10),
+      width: MediaQuery.of(context).size.width * 0.7,
+      child: GestureDetector(
+        child: Card(
+          child: Center(
+            child: Text(
+              busao.placa!,
+              style: const TextStyle(
+                color: Colors.white,
+                letterSpacing: 2,
+              ),
+            ),
+          ),
+          shadowColor: Colors.white,
+          color: const Color(0xFF373D69),
+        ),
+        onTap: () {},
+      ),
+    );
   }
 }

@@ -4,9 +4,7 @@ class Busao {
   double? latitude;
   double? longitude;
 
-  Busao.fromMap(Map<String, dynamic> data)
-      : id = data["id"],
-        placa = data["placa"];
+  Busao.fromMap(Map<String, dynamic> data) : placa = data["placa"];
 
   Map<String, dynamic> toJson() => {
         'id': id,
