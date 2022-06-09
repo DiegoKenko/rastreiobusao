@@ -53,9 +53,13 @@ class _MyHomePageState extends State<MyHomePage> {
   LatLng location = const LatLng(-22.98, -44.99);
   List<Rota> todasRotas = [];
   List<Busao> todosBusao = [];
+  late Rota rotaAtual;
+  late Busao busaoAtual;
+  bool rotaAtiva = false;
+  bool busaoAtivo = false;
   bool ida = true;
   Color idaCor = Colors.orange;
-  Color voltaCor = Colors.green;
+  Color voltaCor = Color.fromARGB(255, 0, 126, 2);
 
   @override
   void dispose() {
@@ -84,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 255, 254, 237),
+      backgroundColor: Color(0xFF57C0A4),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -111,9 +115,14 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             Container(
-              color: ida ? voltaCor : idaCor,
+              decoration: BoxDecoration(
+                color: ida ? voltaCor : idaCor,
+                border: Border.all(
+                  color: Colors.black,
+                  width: 1,
+                ),
+              ),
               padding: const EdgeInsets.all(10),
-              height: MediaQuery.of(context).size.height * 0.2,
               width: MediaQuery.of(context).size.width,
               child: Center(
                 child: FutureBuilder(
@@ -139,11 +148,16 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             const SizedBox(
-              height: 40,
+              height: 80,
             ),
             Container(
-              padding: const EdgeInsets.all(20),
-              height: MediaQuery.of(context).size.height * 0.2,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.black,
+                  width: 1,
+                ),
+              ),
+              padding: const EdgeInsets.all(10),
               width: MediaQuery.of(context).size.width,
               child: Center(
                 child: FutureBuilder(
@@ -168,11 +182,34 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
             ),
+            const SizedBox(
+              height: 40,
+            ),
             Container(
-              color: Colors.indigo,
               height: MediaQuery.of(context).size.height * 0.3,
               width: MediaQuery.of(context).size.width,
-              child: const Center(),
+              child: Center(
+                child: ClipOval(
+                  child: Material(
+                    color: Colors.blue, // Button color
+                    child: InkWell(
+                      splashColor: Colors.red, // Splash color
+                      onTap: () {},
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.5,
+                        height: MediaQuery.of(context).size.width * 0.5,
+                        child: busaoAtivo && rotaAtiva
+                            ? Icon(
+                                Icons.sync,
+                                size: MediaQuery.of(context).size.width * 0.4,
+                              )
+                            : Icon(Icons.refresh_outlined,
+                                size: MediaQuery.of(context).size.width * 0.2),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -186,12 +223,11 @@ class _MyHomePageState extends State<MyHomePage> {
       desiredAccuracy: LocationAccuracy.high,
     ).listen((event) {
       location = LatLng(event.latitude, event.longitude);
-      //Realtime().attLocalizacao(rotaAtual, busaoAtual, location);
     });
   }
 
   Future<void> buscaRotas() async {
-    todasRotas = await Firestore().todasRotas();
+    todasRotas = await Firestore().todasRotas(ida);
   }
 
   Future<void> buscaBusao() async {
@@ -207,8 +243,9 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Card(
           child: Center(
             child: Text(
-              rota.nome!,
+              rota.nome!.toUpperCase(),
               style: const TextStyle(
+                fontStyle: FontStyle.normal,
                 color: Colors.white,
                 letterSpacing: 2,
               ),

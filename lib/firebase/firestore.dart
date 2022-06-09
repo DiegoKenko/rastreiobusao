@@ -4,13 +4,14 @@ import 'package:rastreiobusao/class/busao.dart';
 import 'package:rastreiobusao/class/rota.dart';
 
 class Firestore {
-  Future<List<Rota>> todasRotas() async {
+  Future<List<Rota>> todasRotas(bool ida) async {
     FirebaseApp secondaryApp = Firebase.app('rastreiobusao');
     FirebaseFirestore firestore =
         FirebaseFirestore.instanceFor(app: secondaryApp);
 
     List<Rota> rotas = [];
-    var x = await firestore.collection('rotas').get();
+    var x =
+        await firestore.collection('rotas').where('ida', isEqualTo: true).get();
     for (var element in x.docs) {
       rotas.add(Rota.fromMap(element.data()));
     }
