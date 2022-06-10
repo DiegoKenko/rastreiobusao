@@ -1,11 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:rastreiobusao/class/busao.dart';
 import 'package:rastreiobusao/class/rota.dart';
+import 'package:rastreiobusao/firebase/realtime.dart';
 import 'firebase/firestore.dart';
 import 'dart:io';
 
@@ -32,19 +34,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  final String title;
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -84,129 +83,129 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 0, 126, 158),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              decoration: BoxDecoration(border: bordaBrTB()),
-              width: MediaQuery.of(context).size.width,
-              height: 50,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  Container(),
-                  card(
-                    'SAÍDA',
-                    MediaQuery.of(context).size.width * 0.45,
-                    40,
-                    () {
-                      setState(() {
-                        saida = true;
-                      });
-                    },
-                    saida ? corPad1 : corPad2,
-                  ),
-                  card(
-                    'CHEGADA',
-                    MediaQuery.of(context).size.width * 0.45,
-                    40,
-                    () {
-                      setState(() {
-                        saida = false;
-                      });
-                    },
-                    saida ? corPad2 : corPad1,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(
-              height: 30,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text(
-                'ESCOLHA SUA ROTA:',
-                style: TextStyle(color: corPad2, letterSpacing: 3),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(border: bordaBrTB()),
-              width: MediaQuery.of(context).size.width,
-              child: Center(
-                child: FutureBuilder(
-                  future: buscaRotas(),
-                  builder: (context, snap) {
-                    if (todasRotas.isNotEmpty) {
-                      return SizedBox(
-                        height: 100,
-                        width: MediaQuery.of(context).size.width,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: todasRotas.length,
-                          itemBuilder: (context, index) {
-                            return cardRota(todasRotas[index]);
-                          },
-                        ),
-                      );
-                    } else {
-                      return const Text('Carregando...');
-                    }
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            decoration: BoxDecoration(border: bordaBrTB()),
+            width: MediaQuery.of(context).size.width,
+            height: 50,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                Container(),
+                card(
+                  'SAÍDA',
+                  MediaQuery.of(context).size.width * 0.45,
+                  40,
+                  () {
+                    setState(() {
+                      saida = true;
+                    });
                   },
+                  saida ? corPad1 : corPad2,
                 ),
-              ),
-            ),
-            const SizedBox(
-              height: 30,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text(
-                'ESCOLHA SEU BUSÃO:',
-                style: TextStyle(color: corPad2, letterSpacing: 3),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                border: bordaBrTB(),
-              ),
-              width: MediaQuery.of(context).size.width,
-              child: Center(
-                child: FutureBuilder(
-                  future: buscaBusao(),
-                  builder: (context, snap) {
-                    if (todosBusao.isNotEmpty) {
-                      return SizedBox(
-                        height: 80,
-                        width: MediaQuery.of(context).size.width,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: todosBusao.length,
-                          itemBuilder: (context, index) {
-                            return cardBusao(todosBusao[index]);
-                          },
-                        ),
-                      );
-                    } else {
-                      return const Text('Carregando...');
-                    }
+                card(
+                  'CHEGADA',
+                  MediaQuery.of(context).size.width * 0.45,
+                  40,
+                  () {
+                    setState(() {
+                      saida = false;
+                    });
                   },
+                  saida ? corPad2 : corPad1,
                 ),
+              ],
+            ),
+          ),
+          const SizedBox(
+            height: 30,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              'ESCOLHA SUA ROTA:',
+              style: TextStyle(color: corPad2, letterSpacing: 3),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(border: bordaBrTB()),
+            width: MediaQuery.of(context).size.width,
+            child: Center(
+              child: FutureBuilder(
+                future: buscaRotas(),
+                builder: (context, snap) {
+                  if (todasRotas.isNotEmpty) {
+                    return SizedBox(
+                      height: 100,
+                      width: MediaQuery.of(context).size.width,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: todasRotas.length,
+                        itemBuilder: (context, index) {
+                          return cardRota(todasRotas[index]);
+                        },
+                      ),
+                    );
+                  } else {
+                    return const Text('Carregando...');
+                  }
+                },
               ),
             ),
-            const SizedBox(
-              height: 40,
+          ),
+          const SizedBox(
+            height: 30,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              'ESCOLHA SEU BUSÃO:',
+              style: TextStyle(color: corPad2, letterSpacing: 3),
             ),
-            Center(
-              child: Container(
-                height: 80,
-                width: MediaQuery.of(context).size.width,
-                child: Row(
+          ),
+          Container(
+            decoration: BoxDecoration(
+              border: bordaBrTB(),
+            ),
+            width: MediaQuery.of(context).size.width,
+            child: Center(
+              child: FutureBuilder(
+                future: buscaBusao(),
+                builder: (context, snap) {
+                  if (todosBusao.isNotEmpty) {
+                    return SizedBox(
+                      height: 80,
+                      width: MediaQuery.of(context).size.width,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: todosBusao.length,
+                        itemBuilder: (context, index) {
+                          return cardBusao(todosBusao[index]);
+                        },
+                      ),
+                    );
+                  } else {
+                    return const Text('Carregando...');
+                  }
+                },
+              ),
+            ),
+          ),
+          const SizedBox(
+            height: 40,
+          ),
+          Row(
+            children: [
+              Container(
+                height: 150,
+                child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(left: 30),
-                      child: Center(
+                      padding: const EdgeInsets.only(left: 10, bottom: 20),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
                         child: ClipOval(
                           child: FutureBuilder(
                             future: Geolocator.isLocationServiceEnabled(),
@@ -216,12 +215,12 @@ class _MyHomePageState extends State<MyHomePage> {
                                   color: snap.data! ? Colors.green : Colors.red,
                                   child: InkWell(
                                     child: SizedBox(
-                                      width: 70,
-                                      height: 70,
+                                      width: 40,
+                                      height: 40,
                                       child: snap.data!
-                                          ? Icon(Icons.location_on,
+                                          ? const Icon(Icons.location_on,
                                               color: Colors.white)
-                                          : Icon(
+                                          : const Icon(
                                               Icons.location_off,
                                               color: Colors.white,
                                             ),
@@ -237,11 +236,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                     const SizedBox(
-                      width: 30,
+                      width: 10,
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 30),
-                      child: Center(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
                         child: ClipOval(
                           child: FutureBuilder(
                             future: internetAtiva(),
@@ -251,12 +251,12 @@ class _MyHomePageState extends State<MyHomePage> {
                                   color: snap.data! ? Colors.green : Colors.red,
                                   child: InkWell(
                                     child: SizedBox(
-                                      width: 70,
-                                      height: 70,
+                                      width: 40,
+                                      height: 40,
                                       child: snap.data!
-                                          ? Icon(Icons.wifi,
+                                          ? const Icon(Icons.wifi,
                                               color: Colors.white)
-                                          : Icon(
+                                          : const Icon(
                                               Icons.wifi_off,
                                               color: Colors.white,
                                             ),
@@ -274,9 +274,37 @@ class _MyHomePageState extends State<MyHomePage> {
                   ],
                 ),
               ),
-            )
-          ],
-        ),
+              Expanded(
+                child: Center(
+                  child: ClipOval(
+                    child: FutureBuilder(
+                      future: internetAtiva(),
+                      builder: (context, AsyncSnapshot<bool> snap) {
+                        if (snap.hasData) {
+                          return Material(
+                            color: snap.data! ? Colors.green : Colors.white,
+                            child: InkWell(
+                              child: SizedBox(
+                                width: 150,
+                                height: 150,
+                                child: Icon(
+                                  Icons.sync_outlined,
+                                  color: corPad1,
+                                ),
+                              ),
+                            ),
+                          );
+                        } else {
+                          return Container();
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          )
+        ],
       ),
     );
   }
@@ -287,6 +315,9 @@ class _MyHomePageState extends State<MyHomePage> {
       desiredAccuracy: LocationAccuracy.high,
     ).listen((event) {
       location = LatLng(event.latitude, event.longitude);
+      if (rotaAtiva && busaoAtivo) {
+        Realtime().attLocalizacao(rotaAtual, busaoAtual, location);
+      }
     });
   }
 
