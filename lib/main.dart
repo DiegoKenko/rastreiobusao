@@ -277,12 +277,14 @@ class _MyHomePageState extends State<MyHomePage> {
               Expanded(
                 child: Center(
                   child: ClipOval(
-                    child: FutureBuilder(
-                      future: internetAtiva(),
-                      builder: (context, AsyncSnapshot<bool> snap) {
+                    child: StreamBuilder(
+                      stream: Realtime().statusConexao(),
+                      builder: (context, AsyncSnapshot<DatabaseEvent> snap) {
                         if (snap.hasData) {
                           return Material(
-                            color: snap.data! ? Colors.green : Colors.white,
+                            color: snap.data!.snapshot.value as bool
+                                ? Colors.green
+                                : Colors.white,
                             child: InkWell(
                               child: SizedBox(
                                 width: 150,
