@@ -282,7 +282,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       builder: (context, AsyncSnapshot<DatabaseEvent> snap) {
                         if (snap.hasData) {
                           return Material(
-                            color: snap.data!.snapshot.value as bool
+                            color: snap.data!.snapshot.exists
                                 ? Colors.green
                                 : Colors.white,
                             child: InkWell(
