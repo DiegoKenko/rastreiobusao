@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -6,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:rastreiobusao/class/busao.dart';
 import 'package:rastreiobusao/class/rota.dart';
 import 'firebase/firestore.dart';
+import 'dart:io';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,9 +59,13 @@ class _MyHomePageState extends State<MyHomePage> {
   late Busao busaoAtual;
   bool rotaAtiva = false;
   bool busaoAtivo = false;
-  bool ida = true;
+  bool saida = true;
+  bool internet = false;
+  bool localizacao = false;
   Color idaCor = Colors.orange;
-  Color voltaCor = Color.fromARGB(255, 0, 126, 2);
+  Color voltaCor = const Color.fromARGB(255, 0, 126, 2);
+  Color corPad1 = const Color(0xFF373D69);
+  Color corPad2 = Colors.white;
 
   @override
   void dispose() {
@@ -76,53 +82,57 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    Color getColorTran(Set<MaterialState> states) {
-      if (states.contains(MaterialState.selected)) {
-        return Colors.transparent;
-      }
-      return Colors.transparent;
-    }
-
-    Color getColor(Set<MaterialState> states) {
-      return const Color.fromARGB(255, 82, 168, 218);
-    }
-
     return Scaffold(
-      backgroundColor: Color(0xFF57C0A4),
+      backgroundColor: const Color.fromARGB(255, 0, 126, 158),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              child: ListTile(
-                leading: const Text(
-                  'Caminho de ida até a Multitécnica',
-                  style: TextStyle(
-                    color: Colors.black,
+              decoration: BoxDecoration(border: bordaBrTB()),
+              width: MediaQuery.of(context).size.width,
+              height: 50,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  Container(),
+                  card(
+                    'SAÍDA',
+                    MediaQuery.of(context).size.width * 0.45,
+                    40,
+                    () {
+                      setState(() {
+                        saida = true;
+                      });
+                    },
+                    saida ? corPad1 : corPad2,
                   ),
-                ),
-                trailing: Switch(
-                  inactiveThumbColor: idaCor,
-                  activeColor: voltaCor,
-                  inactiveTrackColor: idaCor,
-                  value: ida,
-                  onChanged: (bool value) {
-                    setState(() {
-                      ida = value;
-                    });
-                  },
-                ),
+                  card(
+                    'CHEGADA',
+                    MediaQuery.of(context).size.width * 0.45,
+                    40,
+                    () {
+                      setState(() {
+                        saida = false;
+                      });
+                    },
+                    saida ? corPad2 : corPad1,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(
+              height: 30,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                'ESCOLHA SUA ROTA:',
+                style: TextStyle(color: corPad2, letterSpacing: 3),
               ),
             ),
             Container(
-              decoration: BoxDecoration(
-                color: ida ? voltaCor : idaCor,
-                border: Border.all(
-                  color: Colors.black,
-                  width: 1,
-                ),
-              ),
-              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(border: bordaBrTB()),
               width: MediaQuery.of(context).size.width,
               child: Center(
                 child: FutureBuilder(
@@ -148,22 +158,25 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             const SizedBox(
-              height: 80,
+              height: 30,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                'ESCOLHA SEU BUSÃO:',
+                style: TextStyle(color: corPad2, letterSpacing: 3),
+              ),
             ),
             Container(
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.black,
-                  width: 1,
-                ),
+                border: bordaBrTB(),
               ),
-              padding: const EdgeInsets.all(10),
               width: MediaQuery.of(context).size.width,
               child: Center(
                 child: FutureBuilder(
                   future: buscaBusao(),
                   builder: (context, snap) {
-                    if (todasRotas.isNotEmpty) {
+                    if (todosBusao.isNotEmpty) {
                       return SizedBox(
                         height: 80,
                         width: MediaQuery.of(context).size.width,
@@ -185,32 +198,83 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(
               height: 40,
             ),
-            Container(
-              height: MediaQuery.of(context).size.height * 0.3,
-              width: MediaQuery.of(context).size.width,
-              child: Center(
-                child: ClipOval(
-                  child: Material(
-                    color: Colors.blue, // Button color
-                    child: InkWell(
-                      splashColor: Colors.red, // Splash color
-                      onTap: () {},
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.5,
-                        height: MediaQuery.of(context).size.width * 0.5,
-                        child: busaoAtivo && rotaAtiva
-                            ? Icon(
-                                Icons.sync,
-                                size: MediaQuery.of(context).size.width * 0.4,
-                              )
-                            : Icon(Icons.refresh_outlined,
-                                size: MediaQuery.of(context).size.width * 0.2),
+            Center(
+              child: Container(
+                height: 80,
+                width: MediaQuery.of(context).size.width,
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 30),
+                      child: Center(
+                        child: ClipOval(
+                          child: FutureBuilder(
+                            future: Geolocator.isLocationServiceEnabled(),
+                            builder: (context, AsyncSnapshot<bool> snap) {
+                              if (snap.hasData) {
+                                return Material(
+                                  color: snap.data! ? Colors.green : Colors.red,
+                                  child: InkWell(
+                                    child: SizedBox(
+                                      width: 70,
+                                      height: 70,
+                                      child: snap.data!
+                                          ? Icon(Icons.location_on,
+                                              color: Colors.white)
+                                          : Icon(
+                                              Icons.location_off,
+                                              color: Colors.white,
+                                            ),
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                return Container();
+                              }
+                            },
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(
+                      width: 30,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 30),
+                      child: Center(
+                        child: ClipOval(
+                          child: FutureBuilder(
+                            future: internetAtiva(),
+                            builder: (context, AsyncSnapshot<bool> snap) {
+                              if (snap.hasData) {
+                                return Material(
+                                  color: snap.data! ? Colors.green : Colors.red,
+                                  child: InkWell(
+                                    child: SizedBox(
+                                      width: 70,
+                                      height: 70,
+                                      child: snap.data!
+                                          ? Icon(Icons.wifi,
+                                              color: Colors.white)
+                                          : Icon(
+                                              Icons.wifi_off,
+                                              color: Colors.white,
+                                            ),
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                return Container();
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
+            )
           ],
         ),
       ),
@@ -227,7 +291,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> buscaRotas() async {
-    todasRotas = await Firestore().todasRotas(ida);
+    todasRotas = await Firestore().todasRotas(!saida);
   }
 
   Future<void> buscaBusao() async {
@@ -236,50 +300,140 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget cardRota(Rota rota) {
     return Container(
-      color: Colors.transparent,
-      padding: const EdgeInsets.only(right: 10, left: 10),
+      decoration: BoxDecoration(
+        color: rotaAtiva
+            ? rotaAtual.id != rota.id
+                ? corPad2
+                : corPad1
+            : corPad2,
+        border: Border.all(
+          color: corPad1,
+          width: 3,
+        ),
+      ),
+      margin: const EdgeInsets.all(10),
+      padding: const EdgeInsets.only(
+        left: 15,
+      ),
       width: MediaQuery.of(context).size.width * 0.7,
       child: GestureDetector(
         child: Card(
           child: Center(
             child: Text(
               rota.nome!.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontStyle: FontStyle.normal,
-                color: Colors.white,
+                color: corPad1,
                 letterSpacing: 2,
               ),
             ),
           ),
-          shadowColor: Colors.white,
-          color: const Color(0xFF373D69),
         ),
-        onTap: () {},
+        onTap: () {
+          setState(() {
+            rotaAtual = rota;
+            rotaAtiva = true;
+          });
+        },
       ),
     );
   }
 
   Widget cardBusao(Busao busao) {
     return Container(
-      color: Colors.transparent,
-      padding: const EdgeInsets.only(right: 10, left: 10),
-      width: MediaQuery.of(context).size.width * 0.7,
+      decoration: BoxDecoration(
+        color: busaoAtivo
+            ? busaoAtual.placa != busao.placa
+                ? corPad2
+                : corPad1
+            : corPad2,
+        border: Border.all(
+          color: corPad1,
+          width: 3,
+        ),
+      ),
+      margin: const EdgeInsets.all(10),
+      padding: const EdgeInsets.only(
+        left: 15,
+      ),
+      width: MediaQuery.of(context).size.width * 0.5,
       child: GestureDetector(
         child: Card(
           child: Center(
             child: Text(
               busao.placa!,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: corPad1,
                 letterSpacing: 2,
               ),
             ),
           ),
-          shadowColor: Colors.white,
-          color: const Color(0xFF373D69),
         ),
-        onTap: () {},
+        onTap: () {
+          setState(() {
+            busaoAtivo = true;
+            busaoAtual = busao;
+          });
+        },
       ),
     );
+  }
+
+  Widget card(String texto, double width, double height, void Function()? onTap,
+      corContainer) {
+    return Container(
+      decoration: BoxDecoration(
+        color: corContainer,
+        border: Border.all(
+          color: corPad1,
+          width: 3,
+        ),
+      ),
+      margin: const EdgeInsets.only(right: 10, left: 10),
+      width: width,
+      height: height,
+      child: GestureDetector(
+        child: Card(
+          color: corPad2,
+          child: Center(
+            child: Text(
+              texto,
+              style: TextStyle(
+                color: corPad1,
+                letterSpacing: 2,
+              ),
+            ),
+          ),
+        ),
+        onTap: onTap,
+      ),
+    );
+  }
+
+  Border bordaBrTB() {
+    return Border(
+      top: BorderSide(
+        width: 2.0,
+        color: corPad2,
+      ),
+      bottom: BorderSide(
+        width: 2.0,
+        color: corPad2,
+      ),
+    );
+  }
+
+  Future<bool> internetAtiva() async {
+    try {
+      final url = FirebaseFirestore.instance.app.options.databaseURL;
+      final result = await InternetAddress.lookup(url!);
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        return true;
+      } else {
+        return false;
+      }
+    } on SocketException catch (_) {
+      return false;
+    }
   }
 }
