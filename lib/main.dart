@@ -1,5 +1,3 @@
-import 'dart:html';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -200,7 +198,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           Row(
             children: [
-              Container(
+              SizedBox(
                 height: 150,
                 child: Column(
                   children: [
@@ -309,7 +307,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           },
                         ),
                       ),
-                      Text('Sincronizar'),
+                      const Text('Sincronizar'),
                     ],
                   ),
                 ),
@@ -413,13 +411,9 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
         onTap: () {
-          setState(() {
-            if (busaoAtual.placa == busao.placa) {
-              busaoAtivo = false;
-            } else {
+          setState(() {       
               busaoAtual = busao;
               busaoAtivo = true;
-            }
           });
         },
       ),
