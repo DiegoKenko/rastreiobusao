@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -276,31 +278,39 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               Expanded(
                 child: Center(
-                  child: ClipOval(
-                    child: StreamBuilder(
-                      stream: Realtime().statusConexao(),
-                      builder: (context, AsyncSnapshot<DatabaseEvent> snap) {
-                        if (snap.hasData) {
-                          return Material(
-                            color: snap.data!.snapshot.exists
-                                ? Colors.green
-                                : Colors.white,
-                            child: InkWell(
-                              child: SizedBox(
-                                width: 150,
-                                height: 150,
-                                child: Icon(
-                                  Icons.sync_outlined,
-                                  color: corPad1,
+                  child: Column(
+                    children: [
+                      ClipOval(
+                        child: StreamBuilder(
+                          stream: Realtime().statusConexao(),
+                          builder:
+                              (context, AsyncSnapshot<DatabaseEvent> snap) {
+                            if (snap.hasData) {
+                              return Material(
+                                color: snap.data!.snapshot.exists &&
+                                        busaoAtivo &&
+                                        rotaAtiva
+                                    ? Colors.green
+                                    : Colors.red,
+                                child: InkWell(
+                                  child: SizedBox(
+                                    width: 150,
+                                    height: 150,
+                                    child: Icon(
+                                      Icons.sync_outlined,
+                                      color: corPad1,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                          );
-                        } else {
-                          return Container();
-                        }
-                      },
-                    ),
+                              );
+                            } else {
+                              return Container();
+                            }
+                          },
+                        ),
+                      ),
+                      Text('Sincronizar'),
+                    ],
                   ),
                 ),
               ),
@@ -313,7 +323,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _getStremLocation() async {
     _currentPositionStream = Geolocator.getPositionStream(
-      intervalDuration: const Duration(seconds: 4),
+      intervalDuration: const Duration(seconds: 5),
       desiredAccuracy: LocationAccuracy.high,
     ).listen((event) {
       location = LatLng(event.latitude, event.longitude);
@@ -404,8 +414,12 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         onTap: () {
           setState(() {
-            busaoAtivo = true;
-            busaoAtual = busao;
+            if (busaoAtual.placa == busao.placa) {
+              busaoAtivo = false;
+            } else {
+              busaoAtual = busao;
+              busaoAtivo = true;
+            }
           });
         },
       ),
