@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -8,11 +7,26 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:rastreiobusao/class/busao.dart';
 import 'package:rastreiobusao/class/rota.dart';
 import 'package:rastreiobusao/firebase/realtime.dart';
+import 'package:wakelock/wakelock.dart';
 import 'firebase/firestore.dart';
-import 'dart:io';
+import 'package:flutter_background/flutter_background.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await FlutterBackground.hasPermissions;
+  FlutterBackgroundAndroidConfig androidConfig =
+      const FlutterBackgroundAndroidConfig(
+    notificationTitle: "rastreiobusao",
+    notificationText: "Enviado localização em tempo real do ônibus",
+    notificationImportance: AndroidNotificationImportance.High,
+    notificationIcon: AndroidResource(
+        name: 'background_icon',
+        defType: 'drawable'), // Default is ic_launcher from folder mipmap
+  );
+  bool success =
+      await FlutterBackground.initialize(androidConfig: androidConfig);
+  await FlutterBackground.enableBackgroundExecution();
+  Wakelock.enable();
   await Firebase.initializeApp(
     name: 'rastreiobusao',
     options: const FirebaseOptions(
@@ -59,12 +73,12 @@ class _MyHomePageState extends State<MyHomePage> {
   bool rotaAtiva = false;
   bool busaoAtivo = false;
   bool saida = true;
-  bool internet = false;
   bool localizacao = false;
   Color idaCor = Colors.orange;
   Color voltaCor = const Color.fromARGB(255, 0, 126, 2);
   Color corPad1 = const Color(0xFF373D69);
   Color corPad2 = Colors.white;
+  Color corPad3 = const Color.fromARGB(255, 255, 230, 1);
 
   @override
   void dispose() {
@@ -83,202 +97,187 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 0, 126, 158),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            decoration: BoxDecoration(border: bordaBrTB()),
-            width: MediaQuery.of(context).size.width,
-            height: 50,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                Container(),
-                card(
-                  'SAÍDA',
-                  MediaQuery.of(context).size.width * 0.45,
-                  40,
-                  () {
-                    setState(() {
-                      saida = true;
-                    });
-                  },
-                  saida ? corPad1 : corPad2,
-                ),
-                card(
-                  'CHEGADA',
-                  MediaQuery.of(context).size.width * 0.45,
-                  40,
-                  () {
-                    setState(() {
-                      saida = false;
-                    });
-                  },
-                  saida ? corPad2 : corPad1,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(
-            height: 30,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Text(
-              'ESCOLHA SUA ROTA:',
-              style: TextStyle(color: corPad2, letterSpacing: 3),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(border: bordaBrTB()),
-            width: MediaQuery.of(context).size.width,
-            child: Center(
-              child: FutureBuilder(
-                future: buscaRotas(),
-                builder: (context, snap) {
-                  if (todasRotas.isNotEmpty) {
-                    return SizedBox(
-                      height: 100,
-                      width: MediaQuery.of(context).size.width,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: todasRotas.length,
-                        itemBuilder: (context, index) {
-                          return cardRota(todasRotas[index]);
-                        },
-                      ),
-                    );
-                  } else {
-                    return const Text('Carregando...');
-                  }
-                },
+      body: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFF373D69), width: 4),
+        ),
+        padding: const EdgeInsets.all(10.0),
+        margin: const EdgeInsets.all(5.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              decoration: BoxDecoration(border: bordaBrTB()),
+              width: MediaQuery.of(context).size.width,
+              height: 50,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  Container(),
+                  card(
+                    'SAÍDA',
+                    MediaQuery.of(context).size.width * 0.45,
+                    40,
+                    () {
+                      setState(() {
+                        saida = true;
+                      });
+                    },
+                    saida ? corPad3 : corPad2,
+                  ),
+                  card(
+                    'CHEGADA',
+                    MediaQuery.of(context).size.width * 0.45,
+                    40,
+                    () {
+                      setState(() {
+                        saida = false;
+                      });
+                    },
+                    saida ? corPad2 : corPad3,
+                  ),
+                ],
               ),
             ),
-          ),
-          const SizedBox(
-            height: 30,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Text(
-              'ESCOLHA SEU BUSÃO:',
-              style: TextStyle(color: corPad2, letterSpacing: 3),
+            const SizedBox(
+              height: 30,
             ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              border: bordaBrTB(),
-            ),
-            width: MediaQuery.of(context).size.width,
-            child: Center(
-              child: FutureBuilder(
-                future: buscaBusao(),
-                builder: (context, snap) {
-                  if (todosBusao.isNotEmpty) {
-                    return SizedBox(
-                      height: 80,
-                      width: MediaQuery.of(context).size.width,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: todosBusao.length,
-                        itemBuilder: (context, index) {
-                          return cardBusao(todosBusao[index]);
-                        },
-                      ),
-                    );
-                  } else {
-                    return const Text('Carregando...');
-                  }
-                },
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                'ESCOLHA SUA ROTA:',
+                style: TextStyle(
+                    color: corPad3,
+                    letterSpacing: 3,
+                    fontWeight: FontWeight.bold),
               ),
             ),
-          ),
-          const SizedBox(
-            height: 40,
-          ),
-          Row(
-            children: [
-              SizedBox(
-                height: 150,
-                child: Column(
+            Container(
+              decoration: BoxDecoration(border: bordaBrTB()),
+              width: MediaQuery.of(context).size.width,
+              child: Center(
+                child: FutureBuilder(
+                  future: buscaRotas(),
+                  builder: (context, snap) {
+                    if (todasRotas.isNotEmpty) {
+                      return SizedBox(
+                        height: 100,
+                        width: MediaQuery.of(context).size.width,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: todasRotas.length,
+                          itemBuilder: (context, index) {
+                            return cardRota(todasRotas[index]);
+                          },
+                        ),
+                      );
+                    } else {
+                      return const Text('Carregando...');
+                    }
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 30,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                'ESCOLHA SEU BUSÃO:',
+                style: TextStyle(
+                    color: corPad3,
+                    letterSpacing: 3,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                border: bordaBrTB(),
+              ),
+              width: MediaQuery.of(context).size.width,
+              child: Center(
+                child: FutureBuilder(
+                  future: buscaBusao(),
+                  builder: (context, snap) {
+                    if (todosBusao.isNotEmpty) {
+                      return SizedBox(
+                        height: 80,
+                        width: MediaQuery.of(context).size.width,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: todosBusao.length,
+                          itemBuilder: (context, index) {
+                            return cardBusao(todosBusao[index]);
+                          },
+                        ),
+                      );
+                    } else {
+                      return const Text('Carregando...');
+                    }
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 40,
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
                   children: [
+                    Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 10, bottom: 20),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: ClipOval(
+                              child: FutureBuilder(
+                                future: Geolocator.isLocationServiceEnabled(),
+                                builder: (context, AsyncSnapshot<bool> snap) {
+                                  if (snap.hasData) {
+                                    if (snap.data!) {
+                                      localizacao = true;
+                                    } else {
+                                      localizacao = false;
+                                    }
+                                    return Material(
+                                      color: snap.data!
+                                          ? Colors.green
+                                          : Colors.red,
+                                      child: InkWell(
+                                        child: SizedBox(
+                                          width: 60,
+                                          height: 60,
+                                          child: snap.data!
+                                              ? const Icon(Icons.location_on,
+                                                  color: Colors.white)
+                                              : const Icon(
+                                                  Icons.location_off,
+                                                  color: Colors.white,
+                                                ),
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    return Container();
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                      ],
+                    ),
                     Padding(
                       padding: const EdgeInsets.only(left: 10, bottom: 20),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: ClipOval(
-                          child: FutureBuilder(
-                            future: Geolocator.isLocationServiceEnabled(),
-                            builder: (context, AsyncSnapshot<bool> snap) {
-                              if (snap.hasData) {
-                                return Material(
-                                  color: snap.data! ? Colors.green : Colors.red,
-                                  child: InkWell(
-                                    child: SizedBox(
-                                      width: 40,
-                                      height: 40,
-                                      child: snap.data!
-                                          ? const Icon(Icons.location_on,
-                                              color: Colors.white)
-                                          : const Icon(
-                                              Icons.location_off,
-                                              color: Colors.white,
-                                            ),
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                return Container();
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: ClipOval(
-                          child: FutureBuilder(
-                            future: internetAtiva(),
-                            builder: (context, AsyncSnapshot<bool> snap) {
-                              if (snap.hasData) {
-                                return Material(
-                                  color: snap.data! ? Colors.green : Colors.red,
-                                  child: InkWell(
-                                    child: SizedBox(
-                                      width: 40,
-                                      height: 40,
-                                      child: snap.data!
-                                          ? const Icon(Icons.wifi,
-                                              color: Colors.white)
-                                          : const Icon(
-                                              Icons.wifi_off,
-                                              color: Colors.white,
-                                            ),
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                return Container();
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Center(
-                  child: Column(
-                    children: [
-                      ClipOval(
+                      child: ClipOval(
                         child: StreamBuilder(
                           stream: Realtime().statusConexao(),
                           builder:
@@ -287,13 +286,14 @@ class _MyHomePageState extends State<MyHomePage> {
                               return Material(
                                 color: snap.data!.snapshot.exists &&
                                         busaoAtivo &&
+                                        localizacao &&
                                         rotaAtiva
                                     ? Colors.green
                                     : Colors.red,
                                 child: InkWell(
                                   child: SizedBox(
-                                    width: 150,
-                                    height: 150,
+                                    width: 60,
+                                    height: 60,
                                     child: Icon(
                                       Icons.sync_outlined,
                                       color: corPad1,
@@ -307,14 +307,13 @@ class _MyHomePageState extends State<MyHomePage> {
                           },
                         ),
                       ),
-                      const Text('Sincronizar'),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          )
-        ],
+            )
+          ],
+        ),
       ),
     );
   }
@@ -345,7 +344,7 @@ class _MyHomePageState extends State<MyHomePage> {
         color: rotaAtiva
             ? rotaAtual.id != rota.id
                 ? corPad2
-                : corPad1
+                : corPad3
             : corPad2,
         border: Border.all(
           color: corPad1,
@@ -371,6 +370,9 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
         onTap: () {
+          _currentPositionStream!.cancel();
+          _currentPositionStream = null;
+          _getStremLocation();
           setState(() {
             rotaAtual = rota;
             rotaAtiva = true;
@@ -386,7 +388,7 @@ class _MyHomePageState extends State<MyHomePage> {
         color: busaoAtivo
             ? busaoAtual.placa != busao.placa
                 ? corPad2
-                : corPad1
+                : corPad3
             : corPad2,
         border: Border.all(
           color: corPad1,
@@ -411,9 +413,9 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
         onTap: () {
-          setState(() {       
-              busaoAtual = busao;
-              busaoAtivo = true;
+          setState(() {
+            busaoAtual = busao;
+            busaoAtivo = true;
           });
         },
       ),
@@ -462,19 +464,5 @@ class _MyHomePageState extends State<MyHomePage> {
         color: corPad2,
       ),
     );
-  }
-
-  Future<bool> internetAtiva() async {
-    try {
-      final url = FirebaseFirestore.instance.app.options.databaseURL;
-      final result = await InternetAddress.lookup(url!);
-      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        return true;
-      } else {
-        return false;
-      }
-    } on SocketException catch (_) {
-      return false;
-    }
   }
 }
