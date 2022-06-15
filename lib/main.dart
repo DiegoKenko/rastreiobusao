@@ -228,83 +228,88 @@ class _MyHomePageState extends State<MyHomePage> {
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
                   children: [
-                    Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10, bottom: 20),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: ClipOval(
-                              child: FutureBuilder(
-                                future: Geolocator.isLocationServiceEnabled(),
-                                builder: (context, AsyncSnapshot<bool> snap) {
-                                  if (snap.hasData) {
-                                    if (snap.data!) {
-                                      localizacao = true;
-                                    } else {
-                                      localizacao = false;
-                                    }
-                                    return Material(
-                                      color: snap.data!
-                                          ? Colors.green
-                                          : Colors.red,
-                                      child: InkWell(
-                                        child: SizedBox(
-                                          width: 60,
-                                          height: 60,
-                                          child: snap.data!
-                                              ? const Icon(Icons.location_on,
-                                                  color: Colors.white)
-                                              : const Icon(
-                                                  Icons.location_off,
-                                                  color: Colors.white,
-                                                ),
-                                        ),
-                                      ),
-                                    );
+                    Container(
+                      decoration: BoxDecoration(
+                        boxShadow: boxShadowRounded(),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 10, bottom: 20),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: ClipOval(
+                            child: FutureBuilder(
+                              future: Geolocator.isLocationServiceEnabled(),
+                              builder: (context, AsyncSnapshot<bool> snap) {
+                                if (snap.hasData) {
+                                  if (snap.data!) {
+                                    localizacao = true;
                                   } else {
-                                    return Container();
+                                    localizacao = false;
                                   }
-                                },
-                              ),
+                                  return Material(
+                                    color:
+                                        snap.data! ? Colors.green : Colors.red,
+                                    child: InkWell(
+                                      child: SizedBox(
+                                        width: 60,
+                                        height: 60,
+                                        child: snap.data!
+                                            ? const Icon(Icons.location_on,
+                                                color: Colors.white)
+                                            : const Icon(
+                                                Icons.location_off,
+                                                color: Colors.white,
+                                              ),
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  return Container();
+                                }
+                              },
                             ),
                           ),
                         ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                      ],
+                      ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10, bottom: 20),
-                      child: ClipOval(
-                        child: StreamBuilder(
-                          stream: Realtime().statusConexao(),
-                          builder:
-                              (context, AsyncSnapshot<DatabaseEvent> snap) {
-                            if (snap.hasData) {
-                              return Material(
-                                color: snap.data!.snapshot.exists &&
-                                        busaoAtivo &&
-                                        localizacao &&
-                                        rotaAtiva
-                                    ? Colors.green
-                                    : Colors.red,
-                                child: InkWell(
-                                  child: SizedBox(
-                                    width: 60,
-                                    height: 60,
-                                    child: Icon(
-                                      Icons.sync_outlined,
-                                      color: corPad1,
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        boxShadow: boxShadowRounded(),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 10, bottom: 20),
+                        child: ClipOval(
+                          child: StreamBuilder(
+                            stream: Realtime().statusConexao(),
+                            builder:
+                                (context, AsyncSnapshot<DatabaseEvent> snap) {
+                              if (snap.hasData) {
+                                return Material(
+                                  color: snap.data!.snapshot.exists &&
+                                          busaoAtivo &&
+                                          localizacao &&
+                                          rotaAtiva
+                                      ? Colors.green
+                                      : Colors.red,
+                                  child: InkWell(
+                                    child: SizedBox(
+                                      width: 60,
+                                      height: 60,
+                                      child: Icon(
+                                        Icons.sync_outlined,
+                                        color: corPad1,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              );
-                            } else {
-                              return Container();
-                            }
-                          },
+                                );
+                              } else {
+                                return Container();
+                              }
+                            },
+                          ),
                         ),
                       ),
                     ),
@@ -341,6 +346,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget cardRota(Rota rota) {
     return Container(
       decoration: BoxDecoration(
+        boxShadow: boxShadow(),
         color: rotaAtiva
             ? rotaAtual.id != rota.id
                 ? corPad2
@@ -358,6 +364,7 @@ class _MyHomePageState extends State<MyHomePage> {
       width: MediaQuery.of(context).size.width * 0.7,
       child: GestureDetector(
         child: Card(
+          elevation: 100,
           child: Center(
             child: Text(
               rota.nome!.toUpperCase(),
@@ -385,6 +392,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget cardBusao(Busao busao) {
     return Container(
       decoration: BoxDecoration(
+        boxShadow: boxShadow(),
         color: busaoAtivo
             ? busaoAtual.placa != busao.placa
                 ? corPad2
@@ -402,6 +410,8 @@ class _MyHomePageState extends State<MyHomePage> {
       width: MediaQuery.of(context).size.width * 0.5,
       child: GestureDetector(
         child: Card(
+          elevation: 100,
+          color: corPad2,
           child: Center(
             child: Text(
               busao.placa!,
@@ -426,6 +436,7 @@ class _MyHomePageState extends State<MyHomePage> {
       corContainer) {
     return Container(
       decoration: BoxDecoration(
+        boxShadow: boxShadow(),
         color: corContainer,
         border: Border.all(
           color: corPad1,
@@ -437,6 +448,7 @@ class _MyHomePageState extends State<MyHomePage> {
       height: height,
       child: GestureDetector(
         child: Card(
+          elevation: 100,
           color: corPad2,
           child: Center(
             child: Text(
@@ -464,5 +476,26 @@ class _MyHomePageState extends State<MyHomePage> {
         color: corPad2,
       ),
     );
+  }
+
+  List<BoxShadow> boxShadow() {
+    return [
+      BoxShadow(
+        color: corPad1,
+        blurRadius: 2,
+        offset: const Offset(-12, 6), // Shadow position
+      ),
+    ];
+  }
+
+  List<BoxShadow> boxShadowRounded() {
+    return [
+      BoxShadow(
+        color: corPad1,
+        blurRadius: 60,
+        spreadRadius: 8,
+        offset: const Offset(1, 1), // Shadow position
+      ),
+    ];
   }
 }
