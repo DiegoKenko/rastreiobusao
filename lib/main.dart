@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:rastreiobusao/class/busao.dart';
 import 'package:rastreiobusao/class/rota.dart';
 import 'package:rastreiobusao/firebase/realtime.dart';
@@ -103,163 +104,218 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         padding: const EdgeInsets.all(10.0),
         margin: const EdgeInsets.all(5.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              decoration: BoxDecoration(border: bordaBrTB()),
-              width: MediaQuery.of(context).size.width,
-              height: 50,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  Container(),
-                  card(
-                    'SAÍDA',
-                    MediaQuery.of(context).size.width * 0.45,
-                    40,
-                    () {
-                      setState(() {
-                        saida = true;
-                      });
-                    },
-                    saida ? corPad3 : corPad2,
-                  ),
-                  card(
-                    'CHEGADA',
-                    MediaQuery.of(context).size.width * 0.45,
-                    40,
-                    () {
-                      setState(() {
-                        saida = false;
-                      });
-                    },
-                    saida ? corPad2 : corPad3,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(
-              height: 30,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text(
-                'ESCOLHA SUA ROTA:',
-                style: TextStyle(
-                    color: corPad3,
-                    letterSpacing: 3,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(border: bordaBrTB()),
-              width: MediaQuery.of(context).size.width,
-              child: Center(
-                child: FutureBuilder(
-                  future: buscaRotas(),
-                  builder: (context, snap) {
-                    if (todasRotas.isNotEmpty) {
-                      return SizedBox(
-                        height: 100,
-                        width: MediaQuery.of(context).size.width,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: todasRotas.length,
-                          itemBuilder: (context, index) {
-                            return cardRota(todasRotas[index]);
-                          },
-                        ),
-                      );
-                    } else {
-                      return const Text('Carregando...');
-                    }
-                  },
+        child: Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10, top: 30),
+                child: Text(
+                  'SAINDO DO(A) :',
+                  style: TextStyle(
+                      color: corPad3,
+                      letterSpacing: 3,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
-            ),
-            const SizedBox(
-              height: 30,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text(
-                'ESCOLHA SEU BUSÃO:',
-                style: TextStyle(
-                    color: corPad3,
-                    letterSpacing: 3,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                border: bordaBrTB(),
-              ),
-              width: MediaQuery.of(context).size.width,
-              child: Center(
-                child: FutureBuilder(
-                  future: buscaBusao(),
-                  builder: (context, snap) {
-                    if (todosBusao.isNotEmpty) {
-                      return SizedBox(
-                        height: 80,
-                        width: MediaQuery.of(context).size.width,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: todosBusao.length,
-                          itemBuilder: (context, index) {
-                            return cardBusao(todosBusao[index]);
-                          },
-                        ),
-                      );
-                    } else {
-                      return const Text('Carregando...');
-                    }
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(
-              height: 40,
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
+              Container(
+                decoration: BoxDecoration(border: bordaBrTB()),
+                width: MediaQuery.of(context).size.width,
+                height: 50,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
                   children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        boxShadow: boxShadowRounded(),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 10, bottom: 20),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: ClipOval(
-                            child: FutureBuilder(
-                              future: Geolocator.isLocationServiceEnabled(),
-                              builder: (context, AsyncSnapshot<bool> snap) {
-                                if (snap.hasData) {
-                                  if (snap.data!) {
-                                    localizacao = true;
+                    Container(),
+                    card(
+                      'PONTO FINAL',
+                      MediaQuery.of(context).size.width * 0.45,
+                      40,
+                      () {
+                        setState(() {
+                          saida = true;
+                        });
+                      },
+                      saida ? corPad3 : corPad2,
+                    ),
+                    card(
+                      'MULTITÉCNICA',
+                      MediaQuery.of(context).size.width * 0.45,
+                      40,
+                      () {
+                        setState(() {
+                          saida = false;
+                        });
+                      },
+                      saida ? corPad2 : corPad3,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(
+                  'ESCOLHA SUA ROTA:',
+                  style: TextStyle(
+                      color: corPad3,
+                      letterSpacing: 3,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(border: bordaBrTB()),
+                width: MediaQuery.of(context).size.width,
+                child: Center(
+                  child: FutureBuilder(
+                    future: buscaRotas(),
+                    builder: (context, snap) {
+                      if (todasRotas.isNotEmpty) {
+                        return SizedBox(
+                          height: 100,
+                          width: MediaQuery.of(context).size.width,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: todasRotas.length,
+                            itemBuilder: (context, index) {
+                              return cardRota(todasRotas[index]);
+                            },
+                          ),
+                        );
+                      } else {
+                        return const Text('Carregando...');
+                      }
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(
+                  'ESCOLHA SEU BUSÃO:',
+                  style: TextStyle(
+                      color: corPad3,
+                      letterSpacing: 3,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  border: bordaBrTB(),
+                ),
+                width: MediaQuery.of(context).size.width,
+                child: Center(
+                  child: FutureBuilder(
+                    future: buscaBusao(),
+                    builder: (context, snap) {
+                      if (todosBusao.isNotEmpty) {
+                        return SizedBox(
+                          height: 80,
+                          width: MediaQuery.of(context).size.width,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: todosBusao.length,
+                            itemBuilder: (context, index) {
+                              return cardBusao(todosBusao[index]);
+                            },
+                          ),
+                        );
+                      } else {
+                        return const Text('Carregando...');
+                      }
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 40,
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          boxShadow: boxShadowRounded(),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 10, bottom: 20),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: ClipOval(
+                              child: FutureBuilder(
+                                future: Geolocator.isLocationServiceEnabled(),
+                                builder: (context, AsyncSnapshot<bool> snap) {
+                                  if (snap.hasData) {
+                                    if (snap.data!) {
+                                      localizacao = true;
+                                    } else {
+                                      localizacao = false;
+                                    }
+                                    return Material(
+                                      color: snap.data!
+                                          ? Colors.green
+                                          : Colors.red,
+                                      child: InkWell(
+                                        child: SizedBox(
+                                          width: 60,
+                                          height: 60,
+                                          child: snap.data!
+                                              ? const Icon(Icons.location_on,
+                                                  color: Colors.white)
+                                              : const Icon(
+                                                  Icons.location_off,
+                                                  color: Colors.white,
+                                                ),
+                                        ),
+                                      ),
+                                    );
                                   } else {
-                                    localizacao = false;
+                                    return Container();
                                   }
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 20,
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          boxShadow: boxShadowRounded(),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 10, bottom: 20),
+                          child: ClipOval(
+                            child: StreamBuilder(
+                              stream: Realtime().statusConexao(),
+                              builder:
+                                  (context, AsyncSnapshot<DatabaseEvent> snap) {
+                                if (snap.hasData) {
                                   return Material(
-                                    color:
-                                        snap.data! ? Colors.green : Colors.red,
+                                    color: snap.data!.snapshot.exists &&
+                                            busaoAtivo &&
+                                            localizacao &&
+                                            rotaAtiva
+                                        ? Colors.green
+                                        : Colors.red,
                                     child: InkWell(
                                       child: SizedBox(
                                         width: 60,
                                         height: 60,
-                                        child: snap.data!
-                                            ? const Icon(Icons.location_on,
-                                                color: Colors.white)
-                                            : const Icon(
-                                                Icons.location_off,
-                                                color: Colors.white,
-                                              ),
+                                        child: Icon(
+                                          Icons.sync_outlined,
+                                          color: corPad1,
+                                        ),
                                       ),
                                     ),
                                   );
@@ -271,53 +327,33 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      width: 20,
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        boxShadow: boxShadowRounded(),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 10, bottom: 20),
-                        child: ClipOval(
-                          child: StreamBuilder(
-                            stream: Realtime().statusConexao(),
-                            builder:
-                                (context, AsyncSnapshot<DatabaseEvent> snap) {
-                              if (snap.hasData) {
-                                return Material(
-                                  color: snap.data!.snapshot.exists &&
-                                          busaoAtivo &&
-                                          localizacao &&
-                                          rotaAtiva
-                                      ? Colors.green
-                                      : Colors.red,
-                                  child: InkWell(
-                                    child: SizedBox(
-                                      width: 60,
-                                      height: 60,
-                                      child: Icon(
-                                        Icons.sync_outlined,
-                                        color: corPad1,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                return Container();
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            )
-          ],
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: FutureBuilder(
+                    future: PackageInfo.fromPlatform(),
+                    builder: (context, AsyncSnapshot<PackageInfo> snapshot) {
+                      if (snapshot.hasData) {
+                        return Text(
+                          'Versão ' + snapshot.data!.version,
+                          style: TextStyle(
+                            color: Colors.yellow,
+                          ),
+                        );
+                      } else {
+                        return Container();
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -330,7 +366,8 @@ class _MyHomePageState extends State<MyHomePage> {
     ).listen((event) {
       location = LatLng(event.latitude, event.longitude);
       if (rotaAtiva && busaoAtivo) {
-        Realtime().attLocalizacao(rotaAtual, busaoAtual, location);
+        Realtime()
+            .attLocalizacao(rotaAtual, busaoAtual, location, event.heading);
       }
     });
   }

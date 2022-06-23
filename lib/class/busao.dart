@@ -3,6 +3,7 @@ class Busao {
   String? id;
   double? latitude;
   double? longitude;
+  double? heading;
 
   Busao.fromMap(Map<String, dynamic> data) : placa = data["placa"];
 
