@@ -9,8 +9,9 @@ class Busao {
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'placa': id,
-        'latitude': id,
-        'longitude': id,
+        'placa': placa,
+        'latitude': latitude,
+        'longitude': longitude,
+        'heading': heading,
       };
 }

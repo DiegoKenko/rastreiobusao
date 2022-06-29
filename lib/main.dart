@@ -360,7 +360,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _currentPositionStream = Geolocator.getPositionStream(
       intervalDuration: const Duration(seconds: 5),
       desiredAccuracy: LocationAccuracy.best,
-      distanceFilter: 300,
+      distanceFilter: 50,
       forceAndroidLocationManager: true,
     ).listen((event) {
       location = LatLng(event.latitude, event.longitude);
